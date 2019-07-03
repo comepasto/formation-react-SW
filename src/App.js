@@ -1,63 +1,64 @@
 import React from 'react';
-import logo from './logo.svg';
 import './App.css';
+import { connect } from 'react-redux'
+import { addTask, toggleTask } from './actions'
 import Task from "./Task";
 
-const tasks = [
-        {name: "Learn React", done: false},
-        {name: "Learn CSS", done: true},
-        {name: "Web development", done: true}
-    ];
 
 class App extends React.Component {
-  constructor(props) {
-    super(props);
 
-    this.state = this.initList()
+  state = {
+    input : ''
   }
 
-  initList() {
-    const taskList = this.generateTasks(tasks);
-
-    return {
-      taskList
-    };
+  handleSubmit(e) {
+    e.preventDefault()
+    if (!this.state.input.trim()) {
+      return;
+    }
+    this.props.addTask(this.state.input);
+    this.setState({input : ''});
   }
 
-  generateTasks(tasks) {
-    return [...tasks].map((task, index) => {
-      return { ...task, id: index };
-    });
-  }
+  handleChange(e) {
 
-  addTask() {
-    const index = this.state.taskList.length;
-    let newTask = {name: "New task", done:false, id: index }
-    const taskList = [...this.state.taskList, newTask];
-    this.setState({taskList})
+    e.preventDefault();
+    this.setState({input : e.target.value});
   }
-
-  handleCheck(task) { 
-    this.state.taskList.find(t => t.id === task.id).done = !task.done;
-    this.setState(this.state.taskList);
-  }
-
 
   render() { 
     return (
       <div className="App">
-
-        {this.state.taskList.map(task => 
-          <Task {...task}  handleCheck={this.handleCheck.bind(this, task)}/>
-        )}
-
         <div>
-          <button onClick={this.addTask.bind(this)}>Add task</button>
+
+          <form onSubmit={this.handleSubmit.bind(this)}>
+           <input type="text" name="task" value={this.state.input} onChange={this.handleChange.bind(this)}/>
+           <button type="submit"> Add Task </button>
+          </form>
         </div>
+        <div>
+          <ul>
+              {this.props.tasks.map(task =>
+                <Task
+                  {...task}
+                  onClick={() => this.props.toggleTask(task.id)}
+                />
+              )}
+          </ul>  
+        </div>   
       </div>
 
     );
   }
 }
 
-export default App;
+const mapDispatchToProps = dispatch => ({
+  toggleTask: id => dispatch(toggleTask(id)),
+  addTask: text => dispatch(addTask(text))
+})
+
+const mapStateToProps = state => ({
+  tasks: state
+})
+
+export default connect(mapStateToProps, mapDispatchToProps) (App);
